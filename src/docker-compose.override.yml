@@ -1,0 +1,88 @@
+version: '3.4'
+
+services:
+#server  management goes here
+  portainer:
+    container_name: portainer
+    restart: always
+    ports:
+      - "8080:8000"
+      - "9090:9000"
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - portainer_data:/data
+
+
+
+  pgadmin:
+    container_name: pgadmin4
+    restart: always
+    environment:
+        - PGADMIN_DEFAULT_EMAIL=administrator@civicmdsg.com.ph
+        - PGADMIN_DEFAULT_PASSWORD=admin1234
+    ports:
+        - "5050:80"
+    volumes:
+        - pgadmin_data:/root/.pgadmin 
+#server management ends here
+
+
+
+
+
+ #database dependency goes here
+ 
+  discountdb:
+    container_name: discountdb
+    environment:
+     - POSTGRES_USER=admin
+     - POSTGRES_PASSWORD=j04AD1140
+     - POSTGRES_DB=DiscountDatabase
+    restart: always
+    ports:
+          - "5432:5432"
+    volumes:
+          - postgres_data:/var/lib/postgresql/data
+
+
+  basketdb:
+    container_name: basketdb
+    restart: always
+    ports:
+      - "6379:6379"
+
+
+  catalogdb:
+    container_name: catalogdb
+    restart: always
+    ports:
+      - "27020:27017"
+    volumes:
+      - mongo_data:/data/db
+ #database dependency ends here
+
+
+
+#SYSTEM API dependency goes here
+  catalog.api:
+    container_name: catalog.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DatabaseSettings:ConnectionString=mongodb://catalogdb:27020
+    depends_on:
+      - catalogdb
+    ports:
+      - "8000:80"
+
+
+  basket.api:
+    container_name: basket.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CacheSettings:ConnectionString=basketdb:6379
+    depends_on:
+      - basketdb
+    ports:
+      - "8001:80"
+#SYSTEM API dependency ends here
+
