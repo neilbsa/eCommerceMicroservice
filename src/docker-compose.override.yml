@@ -31,7 +31,7 @@ services:
 
 
  #database dependency goes here
- 
+
   discountdb:
     container_name: discountdb
     environment:
