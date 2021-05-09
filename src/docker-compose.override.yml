@@ -31,6 +31,12 @@ services:
 
 
  #database dependency goes here
+  mongoclient:
+    container_name: mongoclient
+    volumes:
+      - mongo_client:/data/db 
+    ports:
+      - "3000:3000"
 
   discountdb:
     container_name: discountdb
@@ -68,7 +74,7 @@ services:
     container_name: catalog.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - DatabaseSettings:ConnectionString=mongodb://catalogdb:27020
+      - DatabaseSettings:ConnectionString=mongodb://host.docker.internal:27020
     depends_on:
       - catalogdb
     ports:
@@ -84,5 +90,20 @@ services:
       - basketdb
     ports:
       - "8001:80"
+
+
+
+  discount.api:
+    container_name: discount.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DatabaseSettings:ConnectionString=Server=discountdb;Database=DiscountDatabase;User Id=admin;Password=j04AD1140
+    ports:
+      - "8002:80"
+    depends_on:
+      - discountdb
 #SYSTEM API dependency ends here
+
+
+  
 

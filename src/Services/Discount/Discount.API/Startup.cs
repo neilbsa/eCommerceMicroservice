@@ -1,6 +1,9 @@
+using Discount.API.Data;
+using Discount.API.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -27,6 +30,12 @@ namespace Discount.API
         {
 
             services.AddControllers();
+            services.AddDbContext<DiscountContext>(opt => { opt.UseNpgsql(Configuration.GetValue<string>("DatabaseSettings:ConnectionString")); });
+            Logger<DiscountContext> log;
+          
+
+
+            services.AddScoped<IDiscountRepository, DiscountRepository>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Discount.API", Version = "v1" });
@@ -42,6 +51,9 @@ namespace Discount.API
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Discount.API v1"));
             }
+
+
+         
 
             app.UseRouting();
 
