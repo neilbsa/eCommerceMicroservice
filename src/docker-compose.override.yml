@@ -86,6 +86,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - CacheSettings:ConnectionString=basketdb:6379
+      - GrpcSettings:DiscountUrl=http://discount.GRPC
     depends_on:
       - basketdb
     ports:
@@ -97,13 +98,25 @@ services:
     container_name: discount.api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - DatabaseSettings:ConnectionString=Server=discountdb;Database=DiscountDatabase;User Id=admin;Password=j04AD1140
+      - DatabaseSettings:ConnectionString=Server=discountdb;Database=DiscountDatabaseAPIDB;User Id=admin;Password=j04AD1140
     ports:
       - "8002:80"
     depends_on:
       - discountdb
 #SYSTEM API dependency ends here
 
+#SYSTEM GRPC dependency starts here
 
+  discount.grpc:
+    container_name: discount.GRPC
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DatabaseSettings:ConnectionString=Server=discountdb;Database=DiscountDatabaseGRPC;User Id=admin;Password=j04AD1140
+    ports:
+      - "8003:80"
+    depends_on:
+      - discountdb
   
+#SYSTEM GRPC dependency ends here
+
 
