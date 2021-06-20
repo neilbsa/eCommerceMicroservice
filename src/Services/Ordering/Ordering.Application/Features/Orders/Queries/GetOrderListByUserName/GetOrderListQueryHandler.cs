@@ -28,7 +28,6 @@ namespace Ordering.Application.Features.Orders.Queries.GetOrderListByUserName
            var orderList = await orderRepository.GetOrderByUserName(request.UserName);
             //dito ginagamit yung mapping naten
            var mappedOrder= mapper.Map<List<OrderVm>>(orderList);
-
             return mappedOrder;
         }
 
