@@ -57,6 +57,15 @@ services:
     ports:
       - "6379:6379"
 
+  orderdb:
+     container_name: orderdb
+     environment:
+            SA_PASSWORD: 'csd1234CSD1234'
+            ACCEPT_EULA: 'Y'
+     restart : 'always'
+     ports: 
+        - '1435:1433'
+
 
   catalogdb:
     container_name: catalogdb
@@ -119,4 +128,15 @@ services:
   
 #SYSTEM GRPC dependency ends here
 
+
+
+  ordering.api:
+    container_name: ordering.API
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - "ConnectionStrings:OrderingConnectionString= Server=orderdb,1435;Database=OrderDb;User Id=sa;Password=csd1234CSD1234"
+    depends_on:
+      - orderdb
+    ports:
+      - "8004:80"
 
