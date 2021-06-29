@@ -24,6 +24,15 @@ services:
         - "5050:80"
     volumes:
         - pgadmin_data:/root/.pgadmin 
+
+  rabbitmq:
+    container_name: rabbitmq
+    restart: always
+    ports:
+        - "5672:5672"
+        - "15672:15672"
+
+
 #server management ends here
 
 
@@ -79,6 +88,8 @@ services:
 
 
 #SYSTEM API dependency goes here
+  
+
   catalog.api:
     container_name: catalog.api
     environment:
@@ -96,8 +107,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - CacheSettings:ConnectionString=basketdb:6379
       - GrpcSettings:DiscountUrl=http://discount.GRPC
+      - EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672
     depends_on:
       - basketdb
+      - rabbitmq
     ports:
       - "8001:80"
 
@@ -135,8 +148,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "ConnectionStrings:OrderingConnectionString= Server=orderdb,1435;Database=OrderDb;User Id=sa;Password=csd1234CSD1234"
+      - EventBusSettings:HostAddress=amqp://guest:guest@rabbitmq:5672
     depends_on:
       - orderdb
+      - rabbitmq
     ports:
       - "8004:80"
 

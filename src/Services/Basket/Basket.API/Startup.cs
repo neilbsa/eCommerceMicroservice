@@ -1,6 +1,7 @@
 using Basket.API.GRPC;
 using Basket.API.Repositories;
 using Discount.GRPC.Protos;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -29,18 +30,36 @@ namespace Basket.API
         public void ConfigureServices(IServiceCollection services)
         {
 
-           
+           //redis connection
             services.AddStackExchangeRedisCache(options => {
                 options.Configuration = Configuration.GetValue<string>("CacheSettings:ConnectionString");            
             });
 
             services.AddScoped<IBasketRepository, BasketRepository>();
+            services.AddAutoMapper(typeof(Startup));
+
+
             services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(opt => 
             {
                 opt.Address = new Uri(Configuration["GrpcSettings:DiscountUrl"]);
                 });
             services.AddScoped<DiscountGRPC>();
 
+         
+
+
+            //MASS TRANSIT ADD
+            services.AddMassTransit(config=> {
+                config.UsingRabbitMq((ctx,cfg)=> {
+                    cfg.Host(Configuration.GetValue<string>("EventBusSettings:HostAddress"));
+                
+                });
+            });
+
+            services.AddMassTransitHostedService();
+
+
+            //masstransit 
 
             services.AddControllers();
             services.AddSwaggerGen(c =>

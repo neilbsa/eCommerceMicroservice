@@ -1,6 +1,9 @@
-﻿using Basket.API.Entities;
+﻿using AutoMapper;
+using Basket.API.Entities;
 using Basket.API.GRPC;
 using Basket.API.Repositories;
+using EventBus.Message.Events;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -16,11 +19,15 @@ namespace Basket.API.Controllers
     {
         private readonly IBasketRepository _basket;
         private readonly DiscountGRPC discountGRPC;
+        public readonly IMapper _mapper;
+        private readonly IPublishEndpoint endpoint;
 
-        public BasketController(IBasketRepository basket, DiscountGRPC discountGRPC)
+        public BasketController(IBasketRepository basket, DiscountGRPC discountGRPC, IMapper mapper, IPublishEndpoint endpoint)
         {
             _basket = basket ?? throw new ArgumentNullException(nameof(basket));
             this.discountGRPC = discountGRPC ?? throw new ArgumentNullException(nameof(discountGRPC));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            this.endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
         }
 
         [HttpGet("{username}",Name ="GetBasket")]
@@ -38,8 +45,6 @@ namespace Basket.API.Controllers
         [ProducesResponseType(typeof(ShoppingCart), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<ShoppingCart>> UpdateBasketAsync([FromBody] ShoppingCart cart)
         {
-
-
             //TODO: comunicate discount GRPC and
             foreach (var item in cart.ShoppingCartItems)
             {
@@ -60,6 +65,38 @@ namespace Basket.API.Controllers
         {
             await _basket.DeleteBasketAsync(username);
             return Ok();
+        }
+
+        [Route("[action]")]
+        [HttpPost]
+        [ProducesResponseType((int)HttpStatusCode.Accepted)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> CheckOut([FromBody] BasketCheckOut checkoutBasket)
+        {
+            //get exisiting basket with total price
+            //create basket checkout event - set tototal price on basketcheckout event
+            //send checkout event
+           
+
+            var basket = await _basket.GetBasketsAsync(checkoutBasket.UserName);
+            if(basket == null)
+            {
+                return BadRequest();
+            }
+
+
+            var basketCheckoutEventMapped = _mapper.Map<BasketCheckoutEvent>(checkoutBasket);
+            basketCheckoutEventMapped.TotalPrice = basket.TotalPrice;
+            await endpoint.Publish(basketCheckoutEventMapped);
+
+
+
+            //remove the basket
+            await _basket.DeleteBasketAsync(checkoutBasket.UserName);
+
+            return Accepted();
+
+
         }
     }
 }
